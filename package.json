@@ -1,0 +1,11 @@
+{
+  "name": "adventofcode_2024",
+  "version": "1.0.0",
+  "description": "My solutions to advent of code 2024 coding puzzles",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jan Korona <jan.korona@gmail.com>",
+  "license": "ISC"
+}
