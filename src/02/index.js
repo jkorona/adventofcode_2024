@@ -1,4 +1,4 @@
-const readFile = require('../io');
+const readFile = require("../io");
 
 const data = `
 7 6 4 2 1
@@ -35,6 +35,18 @@ const isSafe = (report) => {
   return true;
 };
 
+const isSafeWithProblemDampener = (report) => {
+  if (!isSafe(report)) {
+    return report.some((_, index) => {
+      return isSafe(report.toSpliced(index, 1));
+    });
+  }
+  return true;
+}
+
 const firstTask = (input) => parse(input).filter(isSafe).length;
+const secondTask = (input) =>
+  parse(input).filter(isSafeWithProblemDampener).length;
 
 console.log(firstTask(readFile("./src/02/input")));
+console.log(secondTask(readFile("./src/02/input")));
