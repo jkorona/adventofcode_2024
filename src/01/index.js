@@ -1,4 +1,4 @@
-const fs = require("fs");
+const readFile = require("../io");
 
 const data = `
 3   4
@@ -8,10 +8,6 @@ const data = `
 3   9
 3   3
 `.trim();
-
-const readFile = (path) => {
-  return fs.readFileSync(path, "utf8");
-};
 
 const parse = (input) => {
   return input.split(/[\n\r]/).reduce(
@@ -44,15 +40,15 @@ const firstTask = (input) => {
   return sum;
 };
 
-const findOccurrences = (input) => input.reduce((occurrencesMap, num) => {
-  if (occurrencesMap.has(num)) {
-    occurrencesMap.set(num, occurrencesMap.get(num) + 1);
-  } else {
-    occurrencesMap.set(num, 1);
-  }
-  return occurrencesMap;
-}, new Map());
-
+const findOccurrences = (input) =>
+  input.reduce((occurrencesMap, num) => {
+    if (occurrencesMap.has(num)) {
+      occurrencesMap.set(num, occurrencesMap.get(num) + 1);
+    } else {
+      occurrencesMap.set(num, 1);
+    }
+    return occurrencesMap;
+  }, new Map());
 
 const secondTask = (input) => {
   [left, right] = parse(input);
@@ -60,7 +56,7 @@ const secondTask = (input) => {
   const occurrencesMap = findOccurrences(right);
   return left.reduce((result, num) => {
     const numOfOccurrences = occurrencesMap.get(num) || 0;
-    return result + (num * numOfOccurrences);
+    return result + num * numOfOccurrences;
   }, 0);
 };
 
