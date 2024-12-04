@@ -1,17 +1,5 @@
 const readFile = require("../io");
-
-const data = `
-MMMSXXMASM
-MSAMXMSMSA
-AMXSXMAAMM
-MSAMASMSMX
-XMASAMXAMM
-XXAMMXXAMA
-SMSMSASXSS
-SAXAMASAAA
-MAMMMXMMMM
-MXMXAXMASX
-`.trim();
+const { reverse } = require("../string");
 
 const parse = (input) => {
   return input
@@ -19,7 +7,7 @@ const parse = (input) => {
     .map((line) => line.split("").map((value) => ({ value })));
 };
 
-const directions = [
+const deltas = [
   [-1, -1],
   [-1, 0],
   [-1, 1],
@@ -50,9 +38,9 @@ const iterator = (matrix, init = [0, 0]) => {
   };
 };
 
-const countMatches = (it) => {
+const countXMAS = (it) => {
   if (it.current().value === "X") {
-    const matches = directions.filter(([dx, dy]) => {
+    const matches = deltas.filter(([dx, dy]) => {
       let next = it;
       return ["M", "A", "S"].every((letter) => {
         next = next.move(dx, dy);
@@ -69,9 +57,49 @@ const firstTask = (input) => {
   let numOfWords = 0;
   let it = iterator(matrix, [-1, 0]);
   while ((it = it.next())) {
-    numOfWords += countMatches(it);
+    numOfWords += countXMAS(it);
+  }
+  return numOfWords;
+};
+
+const diagonals = {
+  fwd: [
+    [-1, 1],
+    [0, 0],
+    [1, -1],
+  ],
+  bck: [
+    [-1, -1],
+    [0, 0],
+    [1, 1],
+  ],
+};
+
+const join = (it, deltas) =>
+  deltas.reduce((word, [dx, dy]) => {
+    return word + it.move(dx, dy)?.current().value ?? "";
+  }, "");
+
+const isMAS = (word) => word === "MAS" || reverse(word) === "MAS";
+
+const matchesX_MAS = (it) => {
+  if (it.current().value === "A") {
+    return isMAS(join(it, diagonals.fwd)) && isMAS(join(it, diagonals.bck));
+  }
+  return false;
+};
+
+const secondTask = (input) => {
+  const matrix = parse(input);
+  let numOfWords = 0;
+  let it = iterator(matrix, [-1, 0]);
+  while ((it = it.next())) {
+    if (matchesX_MAS(it)) {
+      numOfWords++;
+    }
   }
   return numOfWords;
 };
 
 console.log(firstTask(readFile("./src/04/input")));
+console.log(secondTask(readFile("./src/04/input")));
