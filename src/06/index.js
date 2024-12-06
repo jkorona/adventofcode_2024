@@ -1,4 +1,7 @@
 const readFile = require("../io");
+const { measureTime } = require("../utils");
+
+const stop = measureTime();
 
 const directions = {
   ["^"]: [0, -1],
@@ -98,3 +101,5 @@ const secondTask = (input) => {
 
 console.log(firstTask(readFile("./src/06/input")));
 console.log(secondTask(readFile("./src/06/input")));
+
+stop();
