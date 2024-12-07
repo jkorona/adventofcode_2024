@@ -5,3 +5,5 @@ module.exports.measureTime = () => {
     console.log(`Execution Time: ${seconds}s ${nanoseconds / 1e6}ms`);
   };
 };
+
+module.exports.sum = (numbers) => numbers.reduce((sum, number) => sum + number);
