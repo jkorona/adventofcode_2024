@@ -9,3 +9,5 @@ module.exports.measureTime = () => {
 module.exports.sum = (numbers) => numbers.reduce((sum, number) => sum + number);
 module.exports.withinMatrix = ([x, y], width, height) =>
   x > -1 && y > -1 && x < width && y < height;
+
+module.exports.repeat = (value, times) => Array.from({ length: times }, () => value);
