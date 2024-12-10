@@ -1,4 +1,4 @@
-const readFile = require("../io");
+const { readFile } = require("../io");
 const { sum } = require("../utils");
 
 const parse = (input) =>

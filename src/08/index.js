@@ -1,4 +1,4 @@
-const readFile = require("../io");
+const { readFile } = require("../io");
 const { withinMatrix } = require("../utils");
 
 const parse = (input) => {

@@ -1,4 +1,4 @@
-const readFile = require("../io");
+const { readFile } = require("../io");
 
 const parse = (input) => {
   const [first, second] = input.split("\n\n");

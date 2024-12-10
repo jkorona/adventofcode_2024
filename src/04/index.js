@@ -1,4 +1,4 @@
-const readFile = require("../io");
+const { readFile } = require("../io");
 const { reverse } = require("../string");
 
 const parse = (input) => {
