@@ -1,13 +1,4 @@
-const readFile = require("../io");
-
-const data = `
-3   4
-4   3
-2   5
-1   3
-3   9
-3   3
-`.trim();
+const { readFile } = require("../io");
 
 const parse = (input) => {
   return input.split(/[\n\r]/).reduce(

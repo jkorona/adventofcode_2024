@@ -1,4 +1,4 @@
-const readFile = require("../io");
+const { readFile } = require("../io");
 const { measureTime } = require("../utils");
 
 const stop = measureTime();

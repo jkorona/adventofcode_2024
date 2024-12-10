@@ -1,4 +1,4 @@
-const readFile = require("../io");
+const { readFile } = require("../io");
 
 const data = `
 7 6 4 2 1
@@ -42,7 +42,7 @@ const isSafeWithProblemDampener = (report) => {
     });
   }
   return true;
-}
+};
 
 const firstTask = (input) => parse(input).filter(isSafe).length;
 const secondTask = (input) =>
