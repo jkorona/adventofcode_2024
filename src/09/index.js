@@ -1,8 +1,6 @@
 const readFile = require("../io");
 const { repeat } = require("../utils");
 
-const data = `2333133121414131402`;
-
 const parse = (input) => {
   const { memory } = input.split("").reduce(
     ({ memory, id }, value, index) => {
@@ -27,7 +25,7 @@ const getIndices = (memory) =>
       if (cell < 0) {
         free.push(index);
       } else {
-        taken.push({ index, value: cell });
+        taken.push({ index, id: cell });
       }
       return { free, taken };
     },
@@ -39,8 +37,8 @@ const getIndices = (memory) =>
 
 const rebuildMemory = (taken, size) => {
   const memory = repeat(-1, size);
-  taken.forEach(({ value, index }) => (memory[index] = value));
-  return memory
+  taken.forEach(({ id, index }) => (memory[index] = id));
+  return memory;
 };
 
 const checksum = (memory) =>
@@ -56,13 +54,69 @@ const firstTask = (input) => {
   const { free, taken } = getIndices(memory);
   while (free.at(0) < taken.at(-1).index) {
     const freeIndex = free.shift();
-    const { value, index } = taken.pop();
+    const { id, index } = taken.pop();
 
-    taken.unshift({ value, index: freeIndex });
+    taken.unshift({ id, index: freeIndex });
     free.push(index);
   }
 
   return checksum(rebuildMemory(taken, memory.length));
 };
 
+const parseToBlocks = (input) => {
+  return input.split("").reduce(
+    ({ blocks: { free, taken }, id, cursor }, segment, index) => {
+      const size = parseInt(segment, 10);
+      if (index % 2 === 0) {
+        taken.push({ index: cursor, id, size });
+        id++;
+      } else {
+        free.push({ index: cursor, size });
+      }
+
+      return { blocks: { free, taken }, id, cursor: cursor + size };
+    },
+    {
+      blocks: { free: [], taken: [] },
+      id: 0,
+      cursor: 0,
+    }
+  );
+};
+
+const secondTask = (input) => {
+  const {
+    blocks: { free, taken },
+    cursor: length,
+  } = parseToBlocks(input);
+  const newOrder = [];
+
+  while (taken.length > 0) {
+    const file = taken.pop();
+    if (file.size <= 0) continue;
+    const slot = free.find(
+      ({ size, index }) => size >= file.size && index < file.index
+    );
+
+    if (slot) {
+      newOrder.push({ ...file, index: slot.index });
+      const remaining = slot.size - file.size;
+      slot.size = remaining;
+      slot.index = slot.index + file.size;
+    } else {
+      newOrder.push(file);
+    }
+  }
+
+  const memory = newOrder.reduce((memory, file) => {
+    for (let index = file.index; index < file.index + file.size; index++) {
+      memory[index] = file.id;
+    }
+    return memory;
+  }, repeat(-1, length));
+
+  return checksum(memory);
+};
+
 console.log(firstTask(readFile('./src/09/input')));
+console.log(secondTask(readFile('./src/09/input')));
