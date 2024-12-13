@@ -3,15 +3,6 @@
 const { readFile } = require("../io");
 const { sum } = require("../utils");
 
-const data = `
-AAAAAA
-AAABBA
-AAABBA
-ABBAAA
-ABBAAA
-AAAAAA
-`.trim();
-
 class Plot {
   #map;
 
@@ -98,56 +89,26 @@ const firstTask = (input) => {
   );
 };
 
-const corners1 = [
-  /*
-    top right
-
-    oo
-    xo
-  */
+const outsideCorners = [
   [
     [0, -1],
-    // [1, -1],
     [1, 0],
   ],
-  /*
-    top left
-
-    oo
-    ox
-  */
   [
     [0, -1],
-    // [-1, -1],
     [-1, 0],
   ],
-  /*
-    bottom right
-
-    xo
-    oo
-  */
   [
     [0, 1],
-    // [-1, 1],
     [-1, 0],
   ],
-  /*
-    bottom left
-
-    xo
-    oo
-  */
   [
     [1, 0],
-    // [1, 1],
     [0, 1],
-  ], // bottom left
+  ],
 ];
 
-// Xx xo ox xX
-// xo Xx xX ox
-const corners2 = [
+const insideCorners = [
   [
     [1, 0],
     [1, 1],
@@ -168,22 +129,17 @@ const corners2 = [
     [-1, 1],
     [0, 1],
   ],
-  [
-    [-1, 0],
-    [-1, 1],
-    [0, 1],
-  ],
 ];
 
 const calcSides = (region) => {
   let result = 0;
   for (const plot of region.plots) {
-    corners1.forEach((ns) => {
+    outsideCorners.forEach((ns) => {
       if (ns.every(([dx, dy]) => plot.getPlot(dx, dy).plant !== plot.plant)) {
         result++;
       }
     });
-    corners2.forEach((ns) => {
+    insideCorners.forEach((ns) => {
       if (
         ns.every(([dx, dy], index) => {
           const nplant = plot.getPlot(dx, dy).plant;
@@ -194,18 +150,14 @@ const calcSides = (region) => {
       }
     });
   }
-  console.log(region.plots[0].plant, ": ", result);
   return result;
 };
 
 const secondTask = (input) => {
   const regions = findAllRegions(input);
-
   const sides = regions.map((region) => calcSides(region) * region.area);
-
   return sum(sides);
 };
 
-// console.log(firstTask(data));
 console.log(firstTask(readFile("./src/12/input")));
-console.log(secondTask(data));
+console.log(secondTask(readFile("./src/12/input")));
