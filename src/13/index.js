@@ -1,24 +1,6 @@
 // https://adventofcode.com/2024/day/13
 const { readFile } = require("../io");
 
-const data = `
-Button A: X+94, Y+34
-Button B: X+22, Y+67
-Prize: X=8400, Y=5400
-
-Button A: X+26, Y+66
-Button B: X+67, Y+21
-Prize: X=12748, Y=12176
-
-Button A: X+17, Y+86
-Button B: X+84, Y+37
-Prize: X=7870, Y=6450
-
-Button A: X+69, Y+23
-Button B: X+27, Y+71
-Prize: X=18641, Y=10279
-`.trim();
-
 const parse = (input, correction = 0) =>
   input.split("\n\n").map((machine) => {
     const [buttonA, buttonB, prize] = machine.split("\n");
@@ -65,8 +47,8 @@ const minTokens = memoize((buttonA, buttonB, prize) => {
   }
 });
 
-const firstTask = (input, correction) => {
-  const machines = parse(input, correction);
+const bruteForce = (input) => {
+  const machines = parse(input);
 
   return machines
     .map(({ buttonA, buttonB, prize }) => minTokens(buttonA, buttonB, prize))
@@ -74,6 +56,29 @@ const firstTask = (input, correction) => {
     .reduce((sum, tokens) => sum + tokens, 0);
 };
 
+const cramersRule = (a, b, e, c, d, f) => {
+  const x = (e * d - b * f) / (a * d - b * c);
+  const y = (a * f - e * c) / (a * d - b * c);
+  return [x, y];
+};
 
-// console.log(firstTask(readFile('./src/13/input')));
-console.log(firstTask(data, 10000000000000));
+const mathBased = (input, correction) => {
+  const machines = parse(input, correction);
+  return machines
+    .map(({ buttonA, buttonB, prize }) =>
+      cramersRule(
+        buttonA[0],
+        buttonB[0],
+        prize[0],
+        buttonA[1],
+        buttonB[1],
+        prize[1]
+      )
+    )
+    .filter(([a, b]) => Number.isInteger(a) && Number.isInteger(b))
+    .reduce((sum, [a, b]) => sum + 3 * a + b, 0);
+};
+
+console.log(bruteForce(readFile("./src/13/input")));
+console.log(mathBased(readFile("./src/13/input")));
+console.log(mathBased(readFile("./src/13/input"), 10000000000000));
