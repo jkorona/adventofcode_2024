@@ -1,18 +1,6 @@
 // https://adventofcode.com/2024/day/15
 const { readFile } = require("../io");
 
-const data = `
-#######
-#...#.#
-#.....#
-#..OO@#
-#..O..#
-#.....#
-#######
-
-<vv<<^^<<^^
-`.trim();
-
 const Move = {
   UP: "^",
   DOWN: "v",
@@ -60,8 +48,19 @@ const parse = (input, resize = false) => {
   return [map, robot, moves];
 };
 
-const display = (map) =>
+const display = (map, highlight, vector) => {
+  if (highlight) {
+    map = structuredClone(map);
+    map[highlight[0]][highlight[1]] = vector;
+  }
   console.log(map.map((row) => row.join("")).join("\n"), "\n");
+};
+
+const next = (current, vector) => [
+  current[0] + vector[0],
+  current[1] + vector[1],
+];
+
 const switchTiles = (map, tileA, tileB) => {
   const valueA = map[tileA[0]][tileA[1]];
   const valueB = map[tileB[0]][tileB[1]];
@@ -71,61 +70,71 @@ const switchTiles = (map, tileA, tileB) => {
 
   return map;
 };
-const attemptMoveBox = (map, box, vector) => {
-  const nextTileCoords = [box[0] + vector[0], box[1] + vector[1]];
-  const nextTile = map[nextTileCoords[0]][nextTileCoords[1]];
 
-  if (nextTile === Tile.WALL) {
-    return false;
-  }
+const attemptMoveRobot = (map, position, vector) => {
+  const isVerticalMove = [Vectors[Move.UP], Vectors[Move.DOWN]].includes(
+    vector
+  );
+  let tiles = [position];
+  let changes = [];
+  let canMove = undefined;
 
-  if (nextTile === Tile.BOX) {
-    if (!attemptMoveBox(map, nextTileCoords, vector)) {
-      return false;
+  while (canMove === undefined) {
+    tiles.forEach((tile) => changes.unshift(tile));
+    tiles = Object.values(
+      tiles.reduce((acc, currentTileCoords) => {
+        const currentTile = map[currentTileCoords[0]][currentTileCoords[1]];
+        const nextTileCoords = next(currentTileCoords, vector);
+        const nextTile = map[nextTileCoords[0]][nextTileCoords[1]];
+
+        if (nextTile !== Tile.EMPTY) {
+          acc[nextTileCoords.join("")] = nextTileCoords;
+        }
+
+        if (isVerticalMove) {
+          if (nextTile === Tile.BIG_BOX_L && currentTile !== nextTile) {
+            const partial = next(nextTileCoords, Vectors[Move.RIGHT]);
+            acc[partial.join("")] = partial;
+          }
+          if (nextTile === Tile.BIG_BOX_R && currentTile !== nextTile) {
+            const partial = next(nextTileCoords, Vectors[Move.LEFT]);
+            acc[partial.join("")] = partial;
+          }
+        }
+
+        return acc;
+      }, {})
+    );
+
+    if (tiles.some((tile) => map[tile[0]][tile[1]] === Tile.WALL)) {
+      canMove = false;
+    }
+
+    if (
+      tiles.length === 0 ||
+      (tiles.length === 1 && tiles.at(0) === tiles.EMPTY)
+    ) {
+      canMove = true;
     }
   }
 
-  switchTiles(map, box, nextTileCoords);
-  return true;
-};
+  if (canMove) {
+    changes.forEach((tile) => {
+      const to = next(tile, vector);
+      switchTiles(map, tile, to);
+    });
 
-const attemptMoveBigBox = (map, box, vector) => {
-  const current = map[box[0]][box[1]];
-  const [leftSide, rightSide] =
-    current === Tile.BIG_BOX_L
-      ? [box, [box[0], box[1] + 1]]
-      : [[box[0], box[1] - 1], box];
-};
-
-const attemptMoveRobot = (map, robot, move) => {
-  const vector = Vectors[move];
-  const nextTileCoords = [robot[0] + vector[0], robot[1] + vector[1]];
-  const nextTile = map[nextTileCoords[0]][nextTileCoords[1]];
-
-  if ([Tile.BIG_BOX_L, Tile.BIG_BOX_R].includes(nextTile)) {
-    if (attemptMoveBox(map, nextTileCoords, vector)) {
-      return attemptMoveRobot(map, robot, move);
-    }
+    return [map, next(position, vector)];
   }
 
-  if (nextTile === Tile.BOX) {
-    if (attemptMoveBox(map, nextTileCoords, vector)) {
-      return attemptMoveRobot(map, robot, move);
-    }
-  }
-
-  if (nextTile === Tile.EMPTY) {
-    return [switchTiles(map, robot, nextTileCoords), nextTileCoords];
-  }
-
-  return [map, robot];
+  return [map, position];
 };
 
 const firstTask = (input) => {
   let [map, robot, moves] = parse(input);
 
   while (moves.length > 0) {
-    [map, robot] = attemptMoveRobot(map, robot, moves.shift());
+    [map, robot] = attemptMoveRobot(map, robot, Vectors[moves.shift()]);
   }
 
   return map.reduce(
@@ -144,12 +153,19 @@ const secondTask = (input) => {
   let [map, robot, moves] = parse(input, true);
 
   while (moves.length > 0) {
-    console.log("Move: ", moves.at(0));
-    [map, robot] = attemptMoveRobot(map, robot, moves.shift());
-    display(map);
+    [map, robot] = attemptMoveRobot(map, robot, Vectors[moves.shift()]);
   }
+  return map.reduce(
+    (gps, row, rowIndex) =>
+      row.reduce((result, tile, colIndex) => {
+        if (tile === Tile.BIG_BOX_L) {
+          return (result += rowIndex * 100 + colIndex);
+        }
+        return result;
+      }, gps),
+    0
+  );
 };
 
-// console.log(firstTask(readFile("./src/15/input")))
-console.log(secondTask(data));
-// console.log(secondTask(readFile("./src/15/input")))
+console.log(firstTask(readFile("./src/15/input")));
+console.log(secondTask(readFile("./src/15/input")));
