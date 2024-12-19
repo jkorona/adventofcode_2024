@@ -1,12 +1,5 @@
 // https://adventofcode.com/2024/day/17
-
-const input = `
-Register A: 65804993
-Register B: 0
-Register C: 0
-
-Program: 2,4,1,1,7,5,1,4,0,3,4,5,5,5,3,0
-`.trim();
+const { readFile } = require("../io");
 
 const init = (input) => {
   const [registers, program] = input.split("\n\n");
@@ -120,15 +113,14 @@ const find = (program, target, aValue = 0) => {
   for (const candidate of candidates) {
     const execution = exec(getCtx(program, candidate));
     if (execution.output.at(-1) === target.at(-1)) {
-      try {
-        return find(program, target.slice(0, -1), candidate);
-      } catch {
-        // just continue
+      const result = find(program, target.slice(0, -1), candidate);
+      if (result !== -1) {
+        return result;
       }
     }
   }
 
-  throw new Error("Stop");
+  return -1;
 };
 
 const secondTask = (input) => {
@@ -137,5 +129,5 @@ const secondTask = (input) => {
   return find(loop, program);
 };
 
-console.log(firstTask(input));
-console.log(secondTask(input));
+console.log(firstTask(readFile("./src/17/input")));
+console.log(secondTask(readFile("./src/17/input")));
