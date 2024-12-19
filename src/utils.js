@@ -22,3 +22,17 @@ module.exports.directions = [
 
 module.exports.printGrid = (grid, delimeter = " ") =>
   grid.forEach((line) => console.log(line.join(delimeter)));
+
+module.exports.memoize = (fn, keyFn = (...args) => JSON.stringify(args)) => {
+  const cache = {};
+
+  return (...args) => {
+    const key = keyFn.apply(this, args);
+    if (cache[key] !== undefined) {
+      return cache[key];
+    }
+    const result = fn.apply(this, args);
+    cache[key] = result;
+    return result;
+  };
+};
