@@ -1,6 +1,7 @@
 // https://adventofcode.com/2024/day/16
+const { PriorityQueue } = require("../collections");
 const { readFile } = require("../io");
-const { sum } = require("../utils");
+const { directions } = require("../utils");
 
 const parse = (input) => {
   let start, end;
@@ -19,29 +20,7 @@ const parse = (input) => {
   return [maze, start, end];
 };
 
-class PriorityQueue {
-  constructor() {
-    this.queue = [];
-  }
-  enqueue(item, priority) {
-    this.queue.push({ item, priority });
-    this.queue.sort((a, b) => a.priority - b.priority);
-  }
-  dequeue() {
-    return this.queue.shift().item;
-  }
-  isEmpty() {
-    return this.queue.length === 0;
-  }
-}
-
 const key = (point) => point.join("|");
-const directions = [
-  [0, 1, 0], // right
-  [1, 0, 1], // down
-  [0, -1, 2], // left
-  [-1, 0, 3], // up
-];
 
 const dijkstra = (maze, start, end) => {
   const paths = [];
