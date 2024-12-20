@@ -1,5 +1,5 @@
 // https://adventofcode.com/2024/day/20
-const { PriorityQueue, MinHeap } = require("../collections");
+const { MinHeap } = require("../collections");
 const { readFile } = require("../io");
 const { directions, withinMatrix } = require("../utils");
 
@@ -20,13 +20,6 @@ const data = `
 #...#...#...###
 ###############
 `.trim();
-
-/**
- * TODO:
- * Uzyc prostego DSFa, krok po kroku przechodzić sciezke az dojdziesz do "wejscia w skrot".
- * Wtedy przeskoczyc do wyjscia i isc dalej do konca, w sumie mozna uzyc tez gotowej sciezki!!!
- * Wystarczy obliczyc dystansy!!
- */
 
 const parse = (input) => {
   let start, end;
@@ -138,8 +131,6 @@ const find2NSShortcuts = (racetrack, path, expectedSave = 0) => {
   return results;
 };
 
-const makeKey = (a, b) => JSON.stringify([a, b]);
-
 const collectAllValidDistances = (path) => {
   const pairs = [];
   for (let startIndex = 0; startIndex < path.length - 1; startIndex++) {
@@ -156,42 +147,30 @@ const collectAllValidDistances = (path) => {
   return pairs;
 };
 
-const find20NSShortcuts = (racetrack, candidates, path) => {
-  const shortcuts = [];
-  const checked = new Map();
-  const copy = Array.from({ length: racetrack.length }, () =>
-    new Array(racetrack[0].length).fill(".")
-  );
+const find20NSShortcuts = (candidates, path) => {
+  const shortcutDurations = [];
 
   for (let index = 0; index < candidates.length; index++) {
-    const [start, end] = candidates[index];
-    // find shortest path from start to end of shortcut
-    const shortcut = findPath(copy, start, end);
-    // check if we don't already have this shortcut (start <-> end) on the list
-    const key = makeKey(shortcut.at(0), shortcut.at(-1));
-    if (
-      !checked.has(key) &&
-      shortcut.some(([row, col]) => racetrack[row][col] === "#")
-    ) {
-      // clean path for the shortcut
-      shortcut.forEach(([row, col]) => (racetrack[row][col] = "."));
-      // check new distance with shortcut
-      const pathWithShortcut = findPath(racetrack, path.at(0), path.at(-1));
-      // if this shortcut really makes distance shorter store it on the results list
-      if (
-        pathWithShortcut.length > 0 &&
-        pathWithShortcut.length < path.length
-      ) {
-        shortcuts.push(pathWithShortcut);
-      }
-      // restore racetrack to previous state
-      shortcut.slice(1, -1).forEach(([row, col]) => (racetrack[row][col] = "#"));
-      // store information that we already checked this shortcut
-      checked.set(key, true);
-    }
-  }
+    const [start, end, distance] = candidates[index];
 
-  return shortcuts;
+    let pointer = 0;
+    let duration = 0;
+
+    while (pointer !== path.length) {
+      let [row, col] = path[pointer];
+      if (row === start[0] && col === start[1]) {
+        while (row !== end[0] || col !== end[1]) {
+          [row, col] = path[++pointer];
+        }
+        duration += distance;
+      } else {
+        pointer++;
+        duration++;
+      }
+    }
+    shortcutDurations.push(duration);
+  }
+  return shortcutDurations;
 };
 
 const firstTask = (input) => {
@@ -204,24 +183,12 @@ const secondTask = (input) => {
   const [racetrack, start, end] = parse(input);
   const path = findPath(racetrack, start, end);
 
-  return find20NSShortcuts(
-    racetrack,
+  const shortcuts = find20NSShortcuts(
     collectAllValidDistances(path),
     path
-  ).reduce((acc, p) => {
-    const save = path.length - p.length;
-    if (save < 50) {
-      return acc;
-    }
-    if (!acc[save]) {
-      acc[save] = 0;
-    }
-    acc[save] += 1;
-    return acc;
-  }, {});
+  ).filter((distance) => path.length - distance >= 100);
+  return shortcuts.length;
 };
 
-// console.log(firstTask(data));
-// console.log(firstTask(readFile("./src/20/input")));
-console.log(secondTask(data));
-// console.log(secondTask(readFile("./src/20/input")))
+console.log(firstTask(readFile("./src/20/input")));
+console.log(secondTask(readFile("./src/20/input")));
