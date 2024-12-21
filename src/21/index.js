@@ -35,18 +35,14 @@ const moveToSymbol = memoize(
         sequences.push([moves, button]);
       }
 
-      button.forEachSide((move, sideButton) => {
+      button.forEachSide(moves.at(-1) ?? "v", (move, sideButton) => {
         const newNrOfMoves = currentNrOfMoves + 1;
-        try {
-          if (newNrOfMoves <= nrOfMoves[sideButton.row][sideButton.col]) {
-            nrOfMoves[sideButton.row][sideButton.col] = newNrOfMoves;
-            pq.enqueue(
-              [sideButton, newNrOfMoves, [...moves, move]],
-              newNrOfMoves
-            );
-          }
-        } catch {
-          debugger;
+        if (newNrOfMoves <= nrOfMoves[sideButton.row][sideButton.col]) {
+          nrOfMoves[sideButton.row][sideButton.col] = newNrOfMoves;
+          pq.enqueue(
+            [sideButton, newNrOfMoves, [...moves, move]],
+            newNrOfMoves
+          );
         }
       });
     }
@@ -56,25 +52,15 @@ const moveToSymbol = memoize(
   (keypad, symbol, key) => [keypad.length, symbol, key.row, key.col].join("#")
 );
 
-const findAllSequences = (keypad, inputs, startKey) => {
-  const allSeq = Array.from(
-    new Set(
-      inputs.flatMap((input) => findSequences(keypad, input, startKey))
-    ).values()
-  );
-  const minSeqLength = allSeq.sort((a, b) => a.length - b.length).at(0).length;
-  return allSeq.filter((seq) => seq.length === minSeqLength);
-};
-
 const findSequences = (keypad, input, startKey) => {
-  const sequences = new Set();
+  const sequences = [];
   const symbols = input.split("");
   const queue = [[symbols, startKey, []]];
 
   while (queue.length > 0) {
     const [symbols, button, path] = queue.pop();
     if (symbols.length === 0) {
-      sequences.add(path.join(""));
+      sequences.push(path.join(""));
     }
     const [first, ...rest] = symbols;
     const results = moveToSymbol(keypad, first, button);
@@ -83,39 +69,76 @@ const findSequences = (keypad, input, startKey) => {
     });
   }
 
-  const seqList = Array.from(sequences.values());
-  const minSeqLength = seqList.sort((a, b) => a.length - b.length).at(0).length;
+  return sequences;
+};
 
-  return seqList.filter((seq) => seq.length === minSeqLength);
+const findBestSequence = (keypad, input, startKey) => {
+  const symbols = input.split("");
+  const queue = [[symbols, startKey, []]];
+
+  while (queue.length > 0) {
+    const [symbols, button, path] = queue.pop();
+    if (symbols.length === 0) {
+      return path.join("");
+    }
+    const [first, ...rest] = symbols;
+    const [moves, key] = moveToSymbol(keypad, first, button).at(0);
+    queue.push([rest, key, [...path, ...moves, "A"]]);
+  }
+
+  return "";
 };
 
 const firstTask = (input) => {
   return sum(
     input.split("\n").map((line) => {
-      const first = findSequences(numericKeypad, line, numericKeypadStart);
-      const second = findAllSequences(
-        directionalKeypad,
-        first,
-        directionalKeypadStart
-      );
-      const third = findAllSequences(
-        directionalKeypad,
-        second.slice(0, 1),
-        directionalKeypadStart
-      ).at(0);
+      const possibilities = findSequences(
+        numericKeypad,
+        line,
+        numericKeypadStart
+      )
+        .map((seq) => {
+          let factor = 0;
+          seq.split("").reduce((prev, next) => {
+            if (prev === next) {
+              factor += 1;
+            }
+            return next;
+          });
+          return [seq, factor];
+        })
+        .sort((a, b) => b[1] - a[1])
+        .filter(([, factor], _, arr) => {
+          return factor === arr[0][1];
+        })
+        .map(([seq]) => seq);
 
-      console.log(third.length);
-      return Number(line.match(/\d+/)[0]) * third.length;
+      const paths = possibilities.map((possibility) => {
+        const second = findBestSequence(
+          directionalKeypad,
+          possibility,
+          directionalKeypadStart
+        );
+
+        const third = findBestSequence(
+          directionalKeypad,
+          second,
+          directionalKeypadStart
+        );
+
+        return third;
+      });
+
+      const final = paths.sort((a, b) => a.length - b.length).at(0);
+      return Number(line.match(/\d+/)[0]) * final.length;
     })
   );
 };
 
 const secondTask = (input) => 0;
 
-console.log(firstTask(data));
-// console.log(firstTask(readFile("./src/21/input")))
+// console.log(firstTask(data));
+console.log(firstTask(readFile("./src/21/input")));
 console.log(secondTask(data));
 // console.log(secondTask(readFile("./src/21/input")))
 
-// v<<A^>>A<A>A<AA>vA^Av<AAA^>A
-// v<<A>>^A<A>AvA<^AA>A<vAAA>^A

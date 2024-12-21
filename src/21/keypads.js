@@ -13,13 +13,15 @@ class Button {
     this.col = col;
   }
 
-  forEachSide(fn) {
-    Button.moves.forEach(([move, dy, dx]) => {
+  forEachSide(prev, fn) {
+    const start = Button.moves.findIndex(([move]) => move === prev);
+    for (let index = start; index < start + 4; index++) {
+      const [move, dy, dx] = Button.moves[index % 4];
       const buttonOnSide = this.keypad[this.row + dy]?.[this.col + dx];
       if (buttonOnSide) {
         fn(move, buttonOnSide);
       }
-    });
+    }
   }
 }
 
@@ -38,7 +40,9 @@ const numericKeypad = [];
   [null, "0", "A"],
 ].forEach((line, row) => {
   numericKeypad.push(
-    line.map((symbol, col) => new Button(numericKeypad, symbol, row, col))
+    line.map(
+      (symbol, col) => symbol && new Button(numericKeypad, symbol, row, col)
+    )
   );
 });
 
@@ -48,7 +52,9 @@ const directionalKeypad = [];
   ["<", "v", ">"],
 ].forEach((line, row) => {
   directionalKeypad.push(
-    line.map((symbol, col) => new Button(directionalKeypad, symbol, row, col))
+    line.map(
+      (symbol, col) => symbol && new Button(directionalKeypad, symbol, row, col)
+    )
   );
 });
 
