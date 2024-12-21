@@ -89,10 +89,10 @@ const findBestSequence = (keypad, input, startKey) => {
   return "";
 };
 
-const firstTask = (input) => {
+const solution = (input, nrOfRobots) => {
   return sum(
     input.split("\n").map((line) => {
-      const possibilities = findSequences(
+      const instructions = findSequences(
         numericKeypad,
         line,
         numericKeypadStart
@@ -113,32 +113,28 @@ const firstTask = (input) => {
         })
         .map(([seq]) => seq);
 
-      const paths = possibilities.map((possibility) => {
-        const second = findBestSequence(
-          directionalKeypad,
-          possibility,
-          directionalKeypadStart
-        );
-
-        const third = findBestSequence(
-          directionalKeypad,
-          second,
-          directionalKeypadStart
-        );
-
-        return third;
+      const paths = instructions.map((initialInstruction) => {
+        let instruction = initialInstruction;
+        for (let robot = 0; robot < nrOfRobots; robot++) {          
+          instruction = findBestSequence(
+            directionalKeypad,
+            instruction,
+            directionalKeypadStart
+          );
+          console.log(line, ":", "robot", robot + 1);
+        }
+        return instruction;
       });
-
       const final = paths.sort((a, b) => a.length - b.length).at(0);
       return Number(line.match(/\d+/)[0]) * final.length;
     })
   );
 };
 
-const secondTask = (input) => 0;
+const firstTask = (input) => solution(input, 2);
+const secondTask = (input) => solution(input, 25);
 
 // console.log(firstTask(data));
 console.log(firstTask(readFile("./src/21/input")));
-console.log(secondTask(data));
-// console.log(secondTask(readFile("./src/21/input")))
-
+// console.log(secondTask(data));
+console.log(secondTask(readFile("./src/21/input")))
