@@ -25,12 +25,17 @@ class Button {
   }
 }
 
-module.exports.isBackMove = (prev, curr) => {
-  const prevIndex = Button.moves.findIndex(([move]) => move === prev);
-  const currIndex = Button.moves.findIndex(([move]) => move === curr);
-
-  return Math.abs(currIndex - 2) === prevIndex;
-};
+function get(symbol) {
+  for (let row = 0; row < this.length; row++) {
+    const rowElements = this[row];
+    for (let col = 0; col < rowElements.length; col++) {
+      const element = rowElements[col];
+      if (element?.symbol === symbol) {
+        return element;
+      }
+    }
+  }
+}
 
 const numericKeypad = [];
 [
@@ -45,6 +50,8 @@ const numericKeypad = [];
     )
   );
 });
+numericKeypad.start = numericKeypad[3][2];
+numericKeypad.get = get;
 
 const directionalKeypad = [];
 [
@@ -57,8 +64,8 @@ const directionalKeypad = [];
     )
   );
 });
+directionalKeypad.start = directionalKeypad[0][2];
+directionalKeypad.get = get;
 
 module.exports.numericKeypad = numericKeypad;
 module.exports.directionalKeypad = directionalKeypad;
-module.exports.numericKeypadStart = numericKeypad[3][2];
-module.exports.directionalKeypadStart = directionalKeypad[0][2];
