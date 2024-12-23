@@ -2,41 +2,6 @@
 const { readFile } = require("../io");
 const { memoize } = require("../utils");
 
-const data = `
-kh-tc
-qp-kh
-de-cg
-ka-co
-yn-aq
-qp-ub
-cg-tb
-vc-aq
-tb-ka
-wh-tc
-yn-cg
-kh-ub
-ta-co
-de-co
-tc-td
-tb-wq
-wh-td
-ta-ka
-td-qp
-aq-cg
-wq-ub
-ub-vc
-de-ta
-wq-aq
-wq-vc
-wh-yn
-ka-de
-kh-ta
-co-tc
-wh-qp
-tb-vc
-td-yn
-`.trim();
-
 const computer = (name) => {
   const connections = [];
   return {
@@ -51,19 +16,20 @@ const computer = (name) => {
   };
 };
 
-const parse = (input) => input.split("\n").reduce((network, connection) => {
-  const [a, b] = connection.split("-");
-  const computerA = network[a] || computer(a);
-  const computerB = network[b] || computer(b);
+const parse = (input) =>
+  input.split("\n").reduce((network, connection) => {
+    const [a, b] = connection.split("-");
+    const computerA = network[a] || computer(a);
+    const computerB = network[b] || computer(b);
 
-  computerA.addConnection(computerB);
-  computerB.addConnection(computerA);
+    computerA.addConnection(computerB);
+    computerB.addConnection(computerA);
 
-  network[a] = computerA;
-  network[b] = computerB;
+    network[a] = computerA;
+    network[b] = computerB;
 
-  return network;
-}, {});
+    return network;
+  }, {});
 
 const findSubNetworks = (network) => {
   const subnetworks = new Set();
@@ -91,40 +57,34 @@ const findSubNetworks = (network) => {
   return Array.from(subnetworks.values());
 };
 
-function findAllSubnetworks(network) {
-  const visited = new Set();
-  const cycles = [];
+function findCliques(network) {
+  const cliques = [];
 
-  function dfs(node, parent, path) {
-      visited.add(node);
-      path.push(node);
+  function bronKerbosch(current, nodes, visited) {
+    if (nodes.length === 0 && visited.length === 0) {
+      cliques.push([...current]);
+      return;
+    }
 
-      for (const neighbor of network[node].connections) {
-          if (neighbor.name === parent) {
-              // Skip the edge we just came from
-              continue;
-          }
-          if (!visited.has(neighbor.name)) {
-              // Recur for unvisited neighbors
-              dfs(neighbor.name, node, path);
-          } else if (path.includes(neighbor.name)) {
-              // Cycle detected
-              const cycleStartIndex = path.indexOf(neighbor);
-              const cycle = path.slice(cycleStartIndex);
-              cycles.push([...cycle, neighbor.name]);
-          }
-      }
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      const neighbors = network[node].connections.map(({ name }) => name);
 
-      path.pop(); // Backtrack
+      bronKerbosch(
+        [...current, node],
+        nodes.filter((v) => neighbors.includes(v)),
+        visited.filter((v) => neighbors.includes(v))
+      );
+
+      nodes.splice(i, 1);
+      visited.push(node);
+    }
   }
 
-  for (const node in network) {
-      if (!visited.has(node)) {
-          dfs(node, null, []);
-      }
-  }
+  const nodes = Object.keys(network);
+  bronKerbosch([], nodes, []);
 
-  return cycles;
+  return cliques;
 }
 
 const firstTask = (input) => {
@@ -136,10 +96,16 @@ const firstTask = (input) => {
 
 const secondTask = (input) => {
   const network = parse(input);
-  return findAllSubnetworks(network);
-}
 
-// console.log(firstTask(data));
-// console.log(firstTask(readFile("./src/23/input")));
-console.log(secondTask(data));
-// console.log(secondTask(readFile("./src/23/input")))
+  const biggestLAN = findCliques(network).reduce((biggest, subnetwork) => {
+    if (subnetwork.length > biggest.length) {
+      return subnetwork;
+    }
+    return biggest;
+  });
+
+  return biggestLAN.sort().join(",");
+};
+
+console.log(firstTask(readFile("./src/23/input")));
+console.log(secondTask(readFile("./src/23/input")))
