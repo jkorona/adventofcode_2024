@@ -2,53 +2,25 @@
 const { readFile } = require("../io");
 
 const data = `
-x00: 1
-x01: 0
-x02: 1
+x00: 0
+x01: 1
+x02: 0
 x03: 1
 x04: 0
-y00: 1
-y01: 1
+x05: 1
+y00: 0
+y01: 0
 y02: 1
 y03: 1
-y04: 1
+y04: 0
+y05: 1
 
-ntg XOR fgs -> mjb
-y02 OR x01 -> tnw
-kwq OR kpj -> z05
-x00 OR x03 -> fst
-tgd XOR rvg -> z01
-vdt OR tnw -> bfw
-bfw AND frj -> z10
-ffh OR nrd -> bqk
-y00 AND y03 -> djm
-y03 OR y00 -> psh
-bqk OR frj -> z08
-tnw OR fst -> frj
-gnj AND tgd -> z11
-bfw XOR mjb -> z00
-x03 OR x00 -> vdt
-gnj AND wpb -> z02
-x04 AND y00 -> kjc
-djm OR pbm -> qhw
-nrd AND vdt -> hwm
-kjc AND fst -> rvg
-y04 OR y02 -> fgs
-y01 AND x02 -> pbm
-ntg OR kjc -> kwq
-psh XOR fgs -> tgd
-qhw XOR tgd -> z09
-pbm OR djm -> kpj
-x03 XOR y03 -> ffh
-x00 XOR y04 -> ntg
-bfw OR bqk -> z06
-nrd XOR fgs -> wpb
-frj XOR qhw -> z04
-bqk OR frj -> z07
-y03 OR x01 -> nrd
-hwm AND bqk -> z03
-tgd XOR rvg -> z12
-tnw OR pbm -> gnj
+x00 AND y00 -> z05
+x01 AND y01 -> z02
+x02 AND y02 -> z01
+x03 AND y03 -> z03
+x04 AND y04 -> z04
+x05 AND y05 -> z00
 `.trim();
 
 const parseWireEntry = (rawValue) => {
@@ -86,6 +58,15 @@ const exec = {
   XOR: (a, b) => a ^ b,
 };
 
+const toNumber = (obj) =>
+  parseInt(
+    Object.entries(obj)
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map((v) => v[1])
+      .join(""),
+    2
+  );
+
 const firstTask = (stringInput) => {
   const { wires, instructions } = parse(stringInput);
   const input = { ...wires };
@@ -106,16 +87,45 @@ const firstTask = (stringInput) => {
     }
   }
 
-  const outputNumber = Object.entries(output)
-    .sort((a, b) => b[0].localeCompare(a[0]))
-    .map((v) => v[1])
-    .join("");
-  return parseInt(outputNumber, 2);
+  return toNumber(output);
 };
 
-const secondTask = (input) => 0;
+const makeExpectedOutput = (wires) => {
+  const { x, y } = Object.entries(wires).reduce(
+    ({ x, y }, [wire, value]) => {
+      if (wire.startsWith("x")) {
+        x[wire] = value;
+      } else {
+        y[wire] = value;
+      }
+      return { x, y };
+    },
+    {
+      x: {},
+      y: {},
+    }
+  );
 
-// console.log(firstTask(data));
-console.log(firstTask(readFile("./src/24/input")))
+  const xValue = toNumber(x);
+  const yValue = toNumber(y);
+  const zValue = xValue + yValue;
+
+  const expectedOutput = zValue
+    .toString(2)
+    .split("")
+    .reduce((reg, bit, index) => {
+      return { ...reg, [`z${index.toString().padStart(2, "0")}`]: +bit };
+    }, {});
+
+  return expectedOutput;
+}
+
+const secondTask = (stringInput) => {
+  const { wires, instructions } = parse(stringInput);
+  const output = makeExpectedOutput(wires);
+};
+
+console.log(firstTask(data));
+console.log(firstTask(readFile("./src/24/input")));
 console.log(secondTask(data));
 // console.log(secondTask(readFile("./src/24/input")))
