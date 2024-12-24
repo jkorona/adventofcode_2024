@@ -1,28 +1,6 @@
 // https://adventofcode.com/2024/day/24
 const { readFile } = require("../io");
 
-const data = `
-x00: 0
-x01: 1
-x02: 0
-x03: 1
-x04: 0
-x05: 1
-y00: 0
-y01: 0
-y02: 1
-y03: 1
-y04: 0
-y05: 1
-
-x00 AND y00 -> z05
-x01 AND y01 -> z02
-x02 AND y02 -> z01
-x03 AND y03 -> z03
-x04 AND y04 -> z04
-x05 AND y05 -> z00
-`.trim();
-
 const parseWireEntry = (rawValue) => {
   const [wire, value] = rawValue.split(": ");
   return {
@@ -118,14 +96,38 @@ const makeExpectedOutput = (wires) => {
     }, {});
 
   return expectedOutput;
-}
+};
+
+let opCount = 0;
+const visualize = ({ lWire, rWire, gate, outWire }) => {
+  const opId = opCount++;
+
+  console.log(lWire, "-->", opId + `{${gate}}`);
+  console.log(rWire, "-->", opId);
+  console.log(opId, "-->", outWire);
+};
 
 const secondTask = (stringInput) => {
   const { wires, instructions } = parse(stringInput);
-  const output = makeExpectedOutput(wires);
+  const input = { ...wires };
+  const output = {};
+
+  while (instructions.length > 0) {
+    const instruction = instructions.shift();
+    const { lWire, rWire, gate, outWire } = instruction;
+
+    const lInput = input[lWire];
+    const rInput = input[rWire];
+
+    if (lInput !== undefined && rInput !== undefined) {
+      const reg = outWire.startsWith("z") ? output : input;
+      reg[outWire] = exec[gate](lInput, rInput);
+      visualize(instruction);
+    } else {
+      instructions.push(instruction);
+    }
+  }
 };
 
-console.log(firstTask(data));
-console.log(firstTask(readFile("./src/24/input")));
-console.log(secondTask(data));
-// console.log(secondTask(readFile("./src/24/input")))
+console.log(firstTask(readFile("./src/24/fixed_input")));
+console.log(secondTask(readFile("./src/24/input")))
